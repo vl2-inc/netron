@@ -71,7 +71,10 @@ publish_python:
 publish_github_electron:
 	@[ -d node_modules ] || npm install
 	npx electron-builder install-app-deps
-	npx electron-builder --mac --linux --win --publish always
+	npx electron-builder --mac
+	npx electron-builder --linux
+	npx electron-builder --win
+	npx electron-builder --publish always
 
 publish_github_pages:
 	@[ -d node_modules ] || npm install
