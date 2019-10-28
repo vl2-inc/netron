@@ -114,8 +114,42 @@ host.BrowserHost = class {
             e.preventDefault();
         });
 
+        var getFileBlob = function (url, cb) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url);
+            xhr.responseType = "blob";
+            xhr.addEventListener('load', function() {
+                cb(xhr.response);
+            });
+            xhr.send();
+        };
+    
+        var blobToFile = function (blob, name) {
+            blob.lastModifiedDate = new Date();
+            blob.name = name;
+            return blob;
+        };
+        
+        var getFileObject = function(filePathOrUrl, cb) {
+            getFileBlob(filePathOrUrl, function (blob) {
+                cb(blobToFile(blob, '200-5.h5'));
+            });
+        };
+
         if (meta.file) {
             this._openModel(meta.file[0], null);
+            return;
+        }
+
+        if (meta.lundero_request) {
+            //var lundero_file = new File([""], meta.lundero_request[0])
+            // getFileObject(meta.lundero_request[0], function (fileObject) {
+            //     console.log(fileObject);
+            //     var blobs = []
+            //     blobs.push(fileObject)
+            //     this._open(fileObject, blobs)
+            // });
+            this._openModel(meta.lundero_request[0], null);
             return;
         }
 
@@ -143,6 +177,7 @@ host.BrowserHost = class {
                 if (e.target && e.target.files && e.target.files.length > 0) {
                     var files = Array.from(e.target.files);
                     var file = files.find((file) => this._view.accept(file.name));
+                    console.log(file, files)
                     if (file) {
                         this._open(file, files);
                     }
@@ -339,6 +374,7 @@ host.BrowserHost = class {
                     this.document.title = identifier || url.split('/').pop();
                 }).catch((error) => {
                     if (error) {
+                        console.log(error)
                         this.exception(error, false);
                         this.error(error.name, error.message);
                     }

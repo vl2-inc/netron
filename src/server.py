@@ -11,12 +11,12 @@ import time
 from .__version__ import __version__
 
 if sys.version_info[0] > 2:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, parse_qs
     from http.server import HTTPServer
     from http.server import BaseHTTPRequestHandler
     from socketserver import ThreadingMixIn
 else:
-    from urlparse import urlparse
+    from urlparse import urlparse, parse_qs
     from BaseHTTPServer import HTTPServer
     from BaseHTTPServer import BaseHTTPRequestHandler
     from SocketServer import ThreadingMixIn
@@ -42,12 +42,16 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 '.svg': 'image/svg+xml'
             }
         pathname = urlparse(self.path).path
+        print('Pathname:' + pathname)
         folder = os.path.dirname(os.path.realpath(__file__))
+        print('Folder:' + folder)
         location = folder + pathname
+        print('Location:' + location)
         status_code = 0
         headers = {}
         buffer = None
         data = '/data/'
+        models_base_dir = '/models/'
         if status_code == 0:
             if pathname == '/':
                 meta = []
@@ -56,6 +60,11 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                     meta.append("<meta name='version' content='" + __version__ + "' />")
                 if self.file:
                     meta.append("<meta name='file' content='/data/" + self.file + "' />")
+                if urlparse(self.path).query:
+                    query = parse_qs(urlparse(self.path).query)
+                    if query['mgr_id']:
+                        mgr_id = query['mgr_id'][0]
+                        meta.append("<meta name='lundero_request' content='" + models_base_dir + mgr_id + ".h5' />")
                 with codecs.open(location + 'index.html', mode="r", encoding="utf-8") as open_file:
                     buffer = open_file.read()
                 buffer = buffer.replace('<!-- meta -->', '\n'.join(meta))
@@ -77,6 +86,20 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                     headers['Content-Type'] = 'application/octet-stream'
                     headers['Content-Length'] = len(buffer)
                     status_code = 200
+            # elif pathname.startswith('/models/'):
+            #     meta = []
+            #     meta.append("<meta name='type' content='Python' />")
+            #     if __version__:
+            #         meta.append("<meta name='version' content='" + __version__ + "' />")
+                
+            #     meta.append("<meta name='file' content='" + models_base_dir + pathname + ".h5' />")
+            #     with codecs.open(folder + '/index.html', mode="r", encoding="utf-8") as open_file:
+            #         buffer = open_file.read()
+            #     buffer = buffer.replace('<!-- meta -->', '\n'.join(meta))
+            #     buffer = buffer.encode('utf-8')
+            #     headers['Content-Type'] = 'text/html'
+            #     headers['Content-Length'] = len(buffer)
+            #     status_code = 200
             else:
                 if os.path.exists(location) and not os.path.isdir(location):
                     extension = os.path.splitext(location)[1]
@@ -215,7 +238,7 @@ def serve(file, data, log=False, browse=False, port=8080, host='localhost'):
     if browse:
         webbrowser.open(url)
 
-def start(file, log=False, browse=True, port=8080, host='localhost'):
+def start(file, log=False, browse=False, port=8080, host='localhost'):
     '''Start serving model file at host:port and open in web browser
     
     Args:
