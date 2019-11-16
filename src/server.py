@@ -33,6 +33,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 '.jpg':  'image/jpeg',
                 '.ico':  'image/x-icon',
                 '.json': 'application/json',
+                '.h5': 'application/octet-stream',
                 '.pb': 'application/octet-stream',
                 '.ttf': 'font/truetype',
                 '.otf': 'font/opentype',
